@@ -1,0 +1,42 @@
+{
+  "name": "<%= PROJECT_NAME %>",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint --ext .js,.jsx,.ts,.tsx,vue --ignore-path .gitignore .",
+    "tsc": "vue-tsc --noEmit",
+    "format": "prettier . --write",
+    "test": "yarn test:unit",
+    "test:unit": "jest"
+  },
+  "dependencies": {
+    "@vueuse/head": "^0.6.0",
+    "normalize.css": "^8.0.1",
+    "vue": "^3.2.16",
+    "vue-i18n": "^9.2.0-beta.17",
+    "vue-router": "^4.0.12"
+  },
+  "devDependencies": {
+    "@intlify/vite-plugin-vue-i18n": "^2.5.0",
+    "@types/jest": "^27.0.2",
+    "@typescript-eslint/eslint-plugin": "^5.3.0",
+    "@typescript-eslint/parser": "^5.3.0",
+    "@vitejs/plugin-vue": "^1.9.3",
+    "@vue/test-utils": "^2.0.0-rc.16",
+    "@vue/vue3-jest": "^27.0.0-alpha.3",
+    "eslint": "^8.1.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-vue": "^8.0.3",
+    "jest": "^27.3.1",
+    "prettier": "^2.4.1",
+    "sass": "^1.43.4",
+    "ts-jest": "^27.0.7",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.4.3",
+    "vite": "^2.6.4",
+    "vue-tsc": "^0.3.0"
+  }
+}
