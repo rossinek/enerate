@@ -1,1 +1,1 @@
-export const projectName = "<%= PROJECT_NAME %>"
+export const projectName = "<%= PROJECT_ID %>"
