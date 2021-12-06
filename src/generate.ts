@@ -2,15 +2,7 @@ import path from 'path'
 import fse from 'fs-extra'
 import glob from 'glob'
 import Mustache from 'mustache'
-import prompts from 'prompts'
-
-// meta:
-// - prompts
-// - renderFiles (globs)
-// - customTags
-// TODO:
-// - beforeRender
-// - afterRender
+import prompts, { PromptObject } from 'prompts'
 
 type GenerateConfig = {
   template: string;
@@ -18,7 +10,24 @@ type GenerateConfig = {
   silent?: boolean;
 }
 
-const defaultRenderFiles = ['**/*.{html,json,vue,js,ts,jsx,tsx}', '**/.env?()', '**/.env.*']
+type TemplateConfigContext = {
+  template: string;
+  output: string;
+}
+
+type TemplateConfig = {
+  prompts?: PromptObject[];
+  context?: Record<string, any>;
+  renderFiles?: string | string[];
+  tags?: [string, string];
+}
+
+const defaultRenderFiles = ['**/*.{html,json,vue,js,ts,jsx,tsx}', '**/.env', '**/.env.*']
+const confirmOutputOverwritePrompt: PromptObject = {
+  type: 'confirm',
+  name: '__overwriteOutput__',
+  message: 'Output directory exists. Should I overwrite it?',
+}
 
 const asyncGlob = (pattern: Parameters<typeof glob>[0], options: Parameters<typeof glob>[1]) =>
   new Promise<string[]>((resolve, reject) => {
@@ -28,7 +37,7 @@ const asyncGlob = (pattern: Parameters<typeof glob>[0], options: Parameters<type
 
 export const generate = async (config: GenerateConfig): Promise<boolean> => {
   const cl = config.silent ? (() => {}) : console.log
-  const templateMetaFile = path.resolve(config.template, 'index.js')
+  const templateMetaFile = path.resolve(config.template, 'config.js')
   const templateFiles = path.resolve(config.template, 'template')
   const templateMetaRaw = fse.existsSync(templateMetaFile) ? await import(templateMetaFile) : {}
 
@@ -36,27 +45,25 @@ export const generate = async (config: GenerateConfig): Promise<boolean> => {
     throw new Error('No `template` directory')
   }
 
-  const ctx = {
+  const ctx: TemplateConfigContext = {
     template: config.template,
     output: config.output,
   }
-  const templateMeta = typeof templateMetaRaw?.default === 'function' ? templateMetaRaw?.default(ctx) : templateMetaRaw?.default
+  const templateMeta: TemplateConfig = typeof templateMetaRaw?.default === 'function'
+    ? (await templateMetaRaw?.default(ctx))
+    : templateMetaRaw?.default
 
   let promptsCanceled = false
   const isOutputExists = fse.existsSync(config.output)
   const answers = await prompts([
-    ...(isOutputExists ? [{
-      type: 'confirm',
-      name: '__overwriteOutput__',
-      message: 'Output directory exists. Should I overwrite it?',
-    }] : []),
+    ...(isOutputExists ? [confirmOutputOverwritePrompt] : []),
     ...(templateMeta.prompts || []),
   ], {
-    onSubmit: (prompt, answer) => prompt.name === '__overwriteOutput__' && !answer,
+    onSubmit: (prompt, answer) => prompt.name === confirmOutputOverwritePrompt.name && !answer,
     onCancel: () => { promptsCanceled = true },
   })
 
-  if (promptsCanceled || (isOutputExists && !answers.__overwriteOutput__)) {
+  if (promptsCanceled || (isOutputExists && !answers[confirmOutputOverwritePrompt.name as string])) {
     cl('Canceled.')
     return false
   }
@@ -72,14 +79,19 @@ export const generate = async (config: GenerateConfig): Promise<boolean> => {
   const filesArray = (await Promise.all(globsOutput)).flat()
     .filter((filePath, index, all) => all.indexOf(filePath) === index)
 
-  const customTags = templateMeta.customTags || ['<%=', '%>']
+  const tags = templateMeta.tags || ['<%=', '%>']
+
+  const view = {
+    ...answers,
+    ...(templateMeta.context || {})
+  }
 
   await Promise.all(filesArray.map(async relativeFilePath => {
     const filePath = path.resolve(config.output, relativeFilePath)
     const content = await fse.readFile(filePath)
     cl(`> rendering: ${relativeFilePath}`)
 
-    const rendered = Mustache.render(content.toString(), answers, {}, customTags)
+    const rendered = Mustache.render(content.toString(), view, {}, tags)
     await fse.writeFile(filePath, rendered)
   }))
 
