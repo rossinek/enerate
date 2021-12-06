@@ -1,4 +1,4 @@
-# gengengen
+# enerate
 
 A simple tool to create boilerplate generator.
 
