@@ -5,7 +5,7 @@ A simple tool to create boilerplate generator.
 ## Usage
 
 ```sh
-npm start -- path/to/new-project --template examples/vue-project
+npx enerate path/to/new-project --template examples/vue-project
 ```
 
 ## Template
