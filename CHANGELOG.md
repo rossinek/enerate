@@ -12,6 +12,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+## 0.0.2 - 2021-12-07
+
+### Fixed
+
+- Command line tool executable
+
 
 ## 0.0.1 - 2021-12-07
 
