@@ -18,5 +18,8 @@ export default ({ output }) => ({
       message: 'Your name',
       initial: 'Author',
     },
-  ]
+  ],
+  onBeforeCreate: () => console.log('> before create'),
+  onBeforeRender: () => console.log('> before render'),
+  onAfterCreate: () => console.log('> after create'),
 })

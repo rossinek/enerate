@@ -136,3 +136,9 @@ Glob or array of globs defining which files should be rendered. Unmatched files 
 #### `tags?: [string, string]`
 
 **Default**: `['<%=', '%>']`
+
+#### Lifecycle hooks
+
+- `onBeforeCreate?: (renderContext: Record<string, any>) => void | Promise<void>`
+- `onBeforeRender?: (renderContext: Record<string, any>) => void | Promise<void>`
+- `onAfterCreate?: (renderContext: Record<string, any>) => void | Promise<void>`

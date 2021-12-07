@@ -15,11 +15,21 @@ type TemplateConfigContext = {
   output: string;
 }
 
+enum LifecycleHooks {
+  OnBeforeCreate = 'onBeforeCreate',
+  OnBeforeRender = 'onBeforeRender',
+  OnAfterCreate = 'onAfterCreate',
+}
+type LifecycleHookHandler = (renderContext: Record<string, any>) => void | Promise<void>;
+
 type TemplateConfig = {
   prompts?: PromptObject[];
   context?: Record<string, any>;
   renderFiles?: string | string[];
   tags?: [string, string];
+  [LifecycleHooks.OnBeforeCreate]?: LifecycleHookHandler;
+  [LifecycleHooks.OnBeforeRender]?: LifecycleHookHandler;
+  [LifecycleHooks.OnAfterCreate]?: LifecycleHookHandler;
 }
 
 const defaultRenderFiles = ['**/*.{html,json,vue,js,ts,jsx,tsx}', '**/.env', '**/.env.*']
@@ -69,6 +79,14 @@ export const generate = async (config: GenerateConfig): Promise<boolean> => {
   }
 
   if (isOutputExists) fse.removeSync(config.output)
+
+  const renderContext = {
+    ...answers,
+    ...(templateMeta.context || {})
+  }
+
+  await templateMeta[LifecycleHooks.OnBeforeCreate]?.(renderContext)
+
   await fse.copy(templateFiles, config.output)
 
   const metaRenderFiles = [templateMeta.renderFiles].flat().filter(Boolean) as string[]
@@ -81,19 +99,18 @@ export const generate = async (config: GenerateConfig): Promise<boolean> => {
 
   const tags = templateMeta.tags || ['<%=', '%>']
 
-  const view = {
-    ...answers,
-    ...(templateMeta.context || {})
-  }
+  await templateMeta[LifecycleHooks.OnBeforeRender]?.(renderContext)
 
   await Promise.all(filesArray.map(async relativeFilePath => {
     const filePath = path.resolve(config.output, relativeFilePath)
     const content = await fse.readFile(filePath)
     cl(`> rendering: ${relativeFilePath}`)
 
-    const rendered = Mustache.render(content.toString(), view, {}, tags)
+    const rendered = Mustache.render(content.toString(), renderContext, {}, tags)
     await fse.writeFile(filePath, rendered)
   }))
+
+  await templateMeta[LifecycleHooks.OnAfterCreate]?.(renderContext)
 
   cl('Done.')
   return true
