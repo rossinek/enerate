@@ -1,6 +1,9 @@
 const toSlug = str => str.toLowerCase().replace(/[^a-z0-9_]+/g, '-')
 
 export default ({ output }) => ({
+  context: {
+    TIMESTAMP: Date.now()
+  },
   prompts: [
     {
       type: 'text',
