@@ -12,6 +12,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+## 0.0.3 - 2021-12-07
+
+### Added
+
+- Lifecycle hooks
+
+
 ## 0.0.2 - 2021-12-07
 
 ### Fixed
